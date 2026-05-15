@@ -84,20 +84,76 @@
   </template>
 
 </div>
-<!-- EXISTING IMAGES -->
-@if(isset($designing->images))
-<div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-@foreach($designing->images as $img)
-  <div class="relative border rounded">
-    <img src="{{ asset($img->image_path) }}" class="h-32 w-full object-cover">
+<!-- EXISTING IMAGES & FILES -->
 
-    <label class="absolute top-1 right-1 bg-white rounded p-1">
-      <input type="checkbox" name="deleted_images[]" value="{{ $img->id }}">
-      Delete
-    </label>
-  </div>
-@endforeach
+@if(isset($designing->images) && $designing->images->count())
+
+<div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+
+    @foreach($designing->images as $img)
+
+        @php
+            $extension = strtolower(pathinfo($img->image_path, PATHINFO_EXTENSION));
+
+            $imageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        @endphp
+
+        <div class="relative border rounded p-2">
+
+            {{-- IMAGE PREVIEW --}}
+            @if(in_array($extension, $imageExtensions))
+
+                <img src="{{ asset($img->image_path) }}"
+                     class="h-32 w-full object-cover rounded">
+
+            @else
+
+                {{-- FILE/PDF PREVIEW --}}
+                <div class="h-32 flex flex-col items-center justify-center bg-gray-100 rounded">
+
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         class="w-10 h-10 text-gray-500"
+                         fill="none"
+                         viewBox="0 0 24 24"
+                         stroke="currentColor">
+
+                        <path stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M7 7h10M7 11h10M7 15h6m5 5H6a2 2 0 01-2-2V6a2 2 0 012-2h7l5 5v9a2 2 0 01-2 2z" />
+                    </svg>
+
+                    <p class="text-sm mt-2 text-gray-600">
+                        {{ strtoupper($extension) }} File
+                    </p>
+
+                </div>
+
+            @endif
+
+            {{-- DOWNLOAD BUTTON --}}
+            <a href="{{ asset($img->image_path) }}"
+               target="_blank"
+               download
+               class="block mt-2 text-sm text-blue-600 underline"> Download</a>
+
+            {{-- DELETE CHECKBOX --}}
+            <label class="absolute top-1 right-1 bg-white rounded p-1 shadow">
+
+                <input type="checkbox"
+                       name="deleted_images[]"
+                       value="{{ $img->id }}">
+
+                Delete
+
+            </label>
+
+        </div>
+
+    @endforeach
+
 </div>
+
 @endif
 @error('file')
 <p class="mt-1 text-sm text-red-500" style="color: red">{{ $message }}</p>

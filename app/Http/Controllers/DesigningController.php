@@ -152,7 +152,24 @@ class DesigningController extends Controller
         'content'          => 'nullable|string',
     ]);
 
+    if ($request->filled('deleted_images')) {
 
+        foreach ($request->deleted_images as $imgId) {
+    
+            $img = $designing->images()->find($imgId);
+    
+            if ($img) {
+    
+                $filePath = public_path($img->image_path);
+    
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+    
+                $img->delete();
+            }
+        }
+    }
     /* ================= UPDATE DESIGNING ================= */
     $designing->update([
         'name'          => $validated['name'],
