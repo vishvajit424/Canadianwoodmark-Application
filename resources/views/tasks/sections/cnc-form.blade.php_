@@ -1,0 +1,138 @@
+@if(in_array(auth()->user()->userDetails->role->name, ['Admin','Employees']))
+@if(in_array(auth()->user()->userDetails->department->slug, ['cnc', 'admin']))
+<div
+  x-data="{
+    baseSeconds: {{ max(0, (int) $cnc->total_time) }},
+    startedAt: {{ $cnc->start_time ? $cnc->start_time->timestamp : 'null' }},
+    ended: {{ $cnc->end_time ? 'true' : 'false' }},
+    now: Math.floor(Date.now() / 1000),
+
+    init() {
+      if (this.startedAt && !this.ended) {
+        setInterval(() => {
+          this.now++
+        }, 1000)
+      }
+    },
+
+    get total() {
+      if (this.startedAt && !this.ended) {
+        return this.baseSeconds + (this.now - this.startedAt)
+      }
+      return this.baseSeconds
+    },
+
+    format(sec) {
+      let h = Math.floor(sec / 3600)
+      let m = Math.floor((sec % 3600) / 60)
+      let s = sec % 60
+      return `${h}h ${m}m ${s}s`
+    }
+  }"
+  class="bg-white rounded-xl border p-6 space-y-6"
+>
+
+  <!-- HEADER -->
+  <div class="flex items-center justify-between">
+    <h3 class="font-semibold text-lg">Machine Timer</h3>
+
+    <span
+      class="text-sm font-mono bg-gray-100 px-3 py-1 rounded"
+      x-text="format(total)"
+    ></span>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="flex gap-3">
+
+    {{-- START --}}
+    <form method="POST" action="{{ route('cnc.start',$cnc) }}" class="flex-1">
+      @csrf
+      <button
+         @disabled($cnc->end_time)
+        class="w-full py-2 rounded-lg font-medium text-white
+               bg-red-600
+               {{ $cnc->end_time ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600' }}" style="background-color: green;">
+               @if(isset($cnc->total_time)) {{' ▶ Restart'}} @else {{' ▶ Start'}} @endif
+       
+      </button>
+    </form>
+
+    {{-- PAUSE --}}
+    <form method="POST" action="{{ route('cnc.pause',$cnc) }}" class="flex-1">
+      @csrf
+      <button
+        @disabled($cnc->end_time)
+        class="w-full py-2 rounded-lg font-medium text-white
+               bg-yellow-600
+               {{ $cnc->end_time ? 'bg-gray-400 cursor-not-allowed' : 'bg-dark-500' }}" style="background-color: #000;">
+        ⏸ Pause
+      </button>
+    </form>
+
+    {{-- END --}}
+    <form method="POST" action="{{ route('cnc.end',$cnc) }}" class="flex-1">
+      @csrf
+      <button
+        @disabled($cnc->end_time)
+        class="w-full py-2 rounded-lg font-medium text-white
+               {{ $cnc->end_time ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-600' }}">
+        ⏹ End
+      </button>
+    </form>
+  </div>
+
+  <!-- TOTAL TIME -->
+  <div class="bg-gray-50 rounded-lg p-4">
+    <p class="text-sm text-gray-600">Total Time</p>
+    <p class="text-xl font-semibold" x-text="format(total)"></p>
+  </div>
+
+  <!-- LOCK MESSAGE -->
+  @if($cnc->end_time)
+    <div class="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+      🔒 CNC process completed and locked.
+    </div>
+  @endif
+
+  <!-- FORM -->
+  <form method="POST"  action="{{ route('cnc.save',$cnc) }}" class="space-y-4"
+  >
+    @csrf
+
+    <div>
+      <label class="text-sm font-medium text-gray-600">Recut Pieces</label>
+          <textarea
+         name="recut_pieces"
+        rows="3"
+        
+        class="w-full border rounded-lg p-2"
+      >{{ $cnc->recut_pieces ?? ' ' }}</textarea>
+    </div>
+
+    <div>
+      <label class="text-sm font-medium text-gray-600">Special Instructions</label>
+      <textarea
+        name="special_instructions"
+        rows="3"
+        
+        class="w-full border rounded-lg p-2"
+      >{{ $cnc->content ?? ' ' }}</textarea>
+    </div>
+
+    <button
+        type="submit"
+        class="bg-brand-500 hover:bg-brand-600 w-full rounded-lg p-3 text-sm font-medium text-white"
+      >
+        Submit
+      </button>
+
+  </form>
+
+</div>
+@else
+<p>You Don't have Access to this Section. Please connect to Admin</p>
+@endif
+@else
+<p>You Can't Access to this Section.only Employee can Access. Please connect to Admin</p>
+@endif
