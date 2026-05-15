@@ -131,8 +131,8 @@ class DesigningController extends Controller
         'handle_name_size' => 'nullable',
  
         // PDF is OPTIONAL in update
-        'layout_pdf'       => 'required|file|mimes:pdf|max:20480',
-        'updated_pdf'       => 'nullable|file|mimes:pdf|max:20480',
+        'layout_pdf'       => 'required|file|mimes:pdf,jpg,jpeg,png,webp,gif|max:20480',
+        'updated_pdf'       => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp,gif|max:20480',
 
         'content'          => 'nullable|string',
     ]);
