@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Designing;
+use App\Models\DesigningImage;
 use App\Models\Material;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -43,23 +44,11 @@ class DesigningController extends Controller
             'tape'         => 'nullable',
             'handle_name_size'       => 'nullable',
 
-            'layout_pdf'   => 'required',
+            //'layout_pdf'   => 'required',
+            'files' => 'required|array',
+            'files.*' => 'required|file|mimes:pdf,jpg,jpeg,png,webp,gif|max:20480',
             'content'      => 'nullable|string',
         ]);
-        if ($request->hasFile('layout_pdf')) {
-
-            $file = $request->file('layout_pdf');
-        
-            // Generate unique name
-            $name = uniqid() . '_' . time() . '.' . $file->extension();
-        
-            // Move file to public folder
-            $file->move(public_path('uploads/designing'), $name);
-        
-            // Save path (store this in DB)
-            $path = 'uploads/designing/' . $name;
-        }
-
 
         $designing = Designing::create([
                 'task_id' => $task_id,
@@ -69,14 +58,38 @@ class DesigningController extends Controller
                 'phone_no'      => $request['phone_no'],
                 'lock_code'     => $request['lock_code'],
                 'address'       => $request['address'],
-                'installation_date' => $request['delivery_date'],
+                'installation_date' => $request['installation_date'],
                 'material'      => $request['material'],
                 'tape'          => $request['tape'],
                 'handle'        => $request['handle_name_size'],
-                'layout_pdf'    => $path,
+               // 'layout_pdf'    => $path,
                 'content'       => $request['content'] ?? null,
                 'status'        => 'completed',
             ]);
+              /* ================= MULTIPLE IMAGE UPLOAD ================= */
+
+                if ($request->hasFile('files')) {
+
+                    $folder = public_path('uploads/designing');
+
+                    if (!file_exists($folder)) {
+                        mkdir($folder, 0755, true);
+                    }
+
+                    foreach ($request->file('files') as $image) {
+
+                        $imageName = uniqid() . '_' . time() . '_' .
+                            preg_replace('/\s+/', '_', $image->getClientOriginalName());
+
+                        $image->move($folder, $imageName);
+
+                        $designing->images()->create([
+                            'image_path' => 'uploads/designing/' . $imageName,
+                        ]);
+                    }
+                }
+
+
          /* ================= Kitchen Colors ================= */
             $designing->kitchenColor()->create([
                 'upper_cabinet' => $request['upper_cabinet'],
@@ -97,7 +110,7 @@ class DesigningController extends Controller
      */
     public function show(Designing $designing)
     {
-        $designing = Designing::where('task_id', $task->id)
+        $designing = Designing::with('images')->where('task_id', $task->id)
         ->latest()
         ->first();
 
@@ -118,47 +131,27 @@ class DesigningController extends Controller
     public function update(Request $request, Designing $designing)
 {
    
+      //dd($request);
     $validated = $request->validate([
         'name'             => 'required',
         'email'            => 'nullable',
         'phone_no'         => 'required',
         'lock_code'        => 'nullable',
         'address'          => 'nullable',
-        'delivery_date'    => 'nullable|date',
+        'installation_date'    => 'nullable|date',
 
         'material'         => 'nullable',
         'tape'             => 'nullable',
         'handle_name_size' => 'nullable',
  
         // PDF is OPTIONAL in update
-        'layout_pdf'       => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp,gif|max:20480',
+        'files' => 'nullable|array',
+        'files.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp,gif|max:20480',
         'updated_pdf'       => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp,gif|max:20480',
 
         'content'          => 'nullable|string',
     ]);
-// dd($request);
-    /* ================= PDF UPDATE ================= */
-  if ($request->hasFile('layout_pdf')) {
 
-    // Delete old PDF (from public folder)
-    if (!empty($designing->layout_pdf) && file_exists(public_path($designing->layout_pdf))) {
-        unlink(public_path($designing->layout_pdf));
-    }
-
-    $file = $request->file('layout_pdf');
-
-    // Generate unique name
-    $name = uniqid() . '_' . time() . '.' . $file->extension();
-
-    // Move file
-    $file->move(public_path('uploads/designing'), $name);
-
-    // Save path
-    $path = 'uploads/designing/' . $name;
-
-} else {
-    $path = $designing->layout_pdf; // keep old file
-}
 
     /* ================= UPDATE DESIGNING ================= */
     $designing->update([
@@ -167,15 +160,37 @@ class DesigningController extends Controller
         'phone_no'      => $validated['phone_no'],
         'lock_code'     => $validated['lock_code'],
         'address'       => $validated['address'],
-        'installation_date' => $validated['delivery_date'],
+        'installation_date' => $validated['installation_date'],
         'material'      => $validated['material'],
         'tape'          => $validated['tape'],
         'handle'        => $validated['handle_name_size'],
-        'layout_pdf'    => $path,
+       // 'layout_pdf'    => $path,
         'content'       => $validated['content'] ?? null,
         'updated_pdf_user_role' => '',
         'status'        => 'completed',
     ]);
+     /* ================= MULTIPLE FILES ================= */
+
+     if ($request->hasFile('files')) {
+
+        $folder = public_path('uploads/designing');
+
+        if (!file_exists($folder)) {
+            mkdir($folder, 0755, true);
+        }
+
+        foreach ($request->file('files') as $image) {
+
+            $imageName = uniqid() . '_' . time() . '_' .
+                preg_replace('/\s+/', '_', $image->getClientOriginalName());
+
+            $image->move($folder, $imageName);
+
+            $designing->images()->create([
+                'image_path' => 'uploads/designing/' . $imageName,
+            ]);
+        }
+    }
 
     /* ================= UPDATE KITCHEN COLORS ================= */
     $designing->kitchenColor()->updateOrCreate(

@@ -20,14 +20,11 @@ return new class extends Migration
             $table->string('phone_no');
             $table->string('lock_code')->nullable();
             $table->string('address')->nullable();
-
             $table->date('installation_date')->nullable();
-
             $table->text('material')->nullable();
             $table->text('tape')->nullable();
             $table->text('handle')->nullable();
-
-            $table->string('layout_pdf');
+            $table->string('layout_pdf')->nullable();
             $table->string('updated_pdf')->nullable();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->string('updated_pdf_user_role')->nullable();

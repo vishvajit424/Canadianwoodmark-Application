@@ -139,7 +139,7 @@ class TaskController extends Controller
         return redirect()->route('dashboard')->with('error', 'Task not found');
         }else{
         $measurement = Measurement::with('images')->where('task_id', $id)->latest()->first();
-        $designing = Designing::with('kitchenColor')->where('task_id', $id)->latest()->first(); 
+        $designing = Designing::with('images','kitchenColor')->where('task_id', $id)->latest()->first(); 
         $cnc = CNC::firstOrCreate(['task_id' => $id],['user_id' => auth()->id()]);
         $edge = EdgeBender::firstOrCreate(['task_id' => $task->id],['user_id' => auth()->id()]);
         $assembly = Assembly::where('task_id', $id)->latest()->first();

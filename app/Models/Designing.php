@@ -45,7 +45,10 @@ class Designing extends Model
     // {
     //     return $this->belongsTo(User::class);
     // }
-
+    public function images()
+    {
+        return $this->hasMany(DesigningImage::class, 'designing_id');
+    }
     public function kitchenColor()
     {
         return $this->hasOne(KitchenColor::class, 'design_id');

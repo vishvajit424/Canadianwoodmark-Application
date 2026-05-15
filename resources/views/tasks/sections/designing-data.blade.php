@@ -106,13 +106,29 @@
 <!-----Updated Pdf modal--------></tr>
              <tr>
                 <th class="px-4 py-3 bg-gray-50 text-left text-sm font-semibold text-gray-600">
-                    Layout PDF
+                    Layout Files
                 </th>
                 <td class="px-4 py-3 text-sm text-gray-800">
-                   
-              <a href="{{ asset($designing->layout_pdf) }}" download>Download Pdf</a>
+                   <!-- EXISTING IMAGES -->
+                   @if(isset($designing->images) )
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+                        @foreach($designing->images as $img)
+
+                                <a href="{{ asset($img->image_path) }}"
+                                target="_blank"
+                                download
+                                class="block mt-1 text-blue-600 underline">
+                                    Download
+                                </a>
+                        @endforeach
+                    </div>
+                    @endif
+              <!-- <a href="{{ asset($designing->layout_pdf) }}" download>Download Pdf</a> -->
                 </td>
             </tr>
+            
             @if(isset($designing->updated_pdf))
             <tr>
                 <th class="px-4 py-3 bg-gray-50 text-left text-sm font-semibold text-gray-600">

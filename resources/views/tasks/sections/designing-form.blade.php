@@ -13,74 +13,95 @@
  <div class="-mx-2.5 gap-y-5">
                         <div class="w-full px-2.5">
                         <!-- SINGLE FILE UPLOAD -->
-<div  x-data="{ file: null,
-    handleFile(e) {
-      this.file = e.target.files[0]
+                        <div x-data="{
+    files: [],
+    handleFiles(event) {
+      this.files = Array.from(event.target.files)
     },
-    remove() {
-      this.file = null
-      $refs.input.value = ''
+    remove(index) {
+      this.files.splice(index, 1)
     }
-  }"  
-  class="space-y-3">
+  }"
+  class="space-y-3"
+>
 
-  <label class="form-label">Upload Kitchen Layout (PDF)</label>
+  <label class="form-label">Upload Images/PDF</label>
 
-  <!-- Upload Box -->
+  <!-- Dropzone -->
   <label
     class="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-6 cursor-pointer
            bg-gray-50 hover:bg-gray-100 transition"
   >
     <input
-      x-ref="input"
       type="file"
-      name="layout_pdf"
-      class="hidden"
-      @change="handleFile"
+      class="hidden" 
+      name="files[]"
+      @change="handleFiles"
+      multiple
     />
 
-    <template x-if="!file">
-      <div class="text-center">
-        <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 4v12m6-6H6" />
-        </svg>
-        <p class="text-sm text-gray-600">Click to upload</p>
-        <p class="text-xs text-gray-400">PDF</p>
-      </div>
-    </template>
+    <svg class="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M7 16V4a4 4 0 018 0v12m-4 4v-4" />
+    </svg>
 
-    <!-- File Preview -->
-    <template x-if="file">
-      <div class="flex items-center gap-3">
-        <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 16V4a2 2 0 012-2h8l6 6v8a2 2 0 01-2 2H6a2 2 0 01-2-2z" />
-        </svg>
-        <div>
-          <p class="text-sm font-medium" x-text="file.name"></p>
-          <p class="text-xs text-gray-500"
-             x-text="(file.size/1024).toFixed(1) + ' KB'"></p>
-        </div>
-      </div>
-    </template>
+    <p class="text-sm text-gray-600">
+      Click to upload or drag & drop
+    </p>
+    <p class="text-xs text-gray-400">
+      PNG, JPG, JPEG (multiple files)
+    </p>
   </label>
 
-  <!-- Remove Button -->
-  <template x-if="file">
-    <button
-      type="button"
-      @click="remove"
-      class="text-sm text-red-500 hover:text-red-700"
-    >
-      Remove file
-    </button>
+  <!-- File List -->
+  <template x-if="files.length">
+    <div class="space-y-2">
+      <template x-for="(file, index) in files" :key="index">
+        <div class="flex items-center justify-between bg-white border rounded-lg p-2">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 16V4a2 2 0 012-2h8l6 6v8a2 2 0 01-2 2H6a2 2 0 01-2-2z" />
+            </svg>
+
+            <div>
+              <p class="text-sm font-medium" x-text="file.name"></p>
+              <p class="text-xs text-gray-500"
+                 x-text="(file.size/1024).toFixed(1) + ' KB'"></p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            @click="remove(index)"
+            class="text-red-500 hover:text-red-700 text-sm"
+          >
+            Remove
+          </button>
+        </div>
+      </template>
+    </div>
   </template>
 
 </div>
+<!-- EXISTING IMAGES -->
+@if(isset($designing->images))
+<div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+@foreach($designing->images as $img)
+  <div class="relative border rounded">
+    <img src="{{ asset($img->image_path) }}" class="h-32 w-full object-cover">
+
+    <label class="absolute top-1 right-1 bg-white rounded p-1">
+      <input type="checkbox" name="deleted_images[]" value="{{ $img->id }}">
+      Delete
+    </label>
+  </div>
+@endforeach
+</div>
+@endif
 @error('file')
-                                    <p class="mt-1 text-sm text-red-500" style="color: red">{{ $message }}</p>
-                                @enderror
+<p class="mt-1 text-sm text-red-500" style="color: red">{{ $message }}</p>
+@enderror
 </div>
 <div class="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                             <div class="col-span-2 lg:col-span-1">
@@ -134,8 +155,8 @@
                                 <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                                      Installation Date 
                                 </label>
-                                <input type="text" name="delivery_date" id="date" placeholder="Enter Installation Date " class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800" value="{{ $designing->delivery_date ?? '' }}" required>
-                                @error('delivery_date')
+                                <input type="text" name="installation_date" id="date" placeholder="Enter Installation Date " class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800" value="{{ $designing->delivery_date ?? '' }}" required>
+                                @error('installation_date')
                                     <p class="mt-1 text-sm text-red-500" style="color: red">{{ $message }}</p>
                                 @enderror
                             </div>
