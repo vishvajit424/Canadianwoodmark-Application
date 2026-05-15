@@ -1,0 +1,16 @@
+/*@tailwind base;
+@tailwind components;
+@tailwind utilities;
+*/
+@import "tailwindcss";
+
+/* TailAdmin main CSS */
+@import "./tailadmin/css/style.css";
+
+/* JSVectorMap */
+@import "jsvectormap/dist/jsvectormap.css";
+
+
+@theme {
+  --color-red-900: #7f1d1d;
+}
